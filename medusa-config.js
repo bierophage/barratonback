@@ -49,7 +49,7 @@ const plugins = [
         bucket: process.env.S3_BUCKET,
         region: process.env.S3_REGION,
         access_key_id: process.env.S3_ACCESS_KEY_ID,
-        secret_access_key: process.env.S3_SECRET_ACCESS_KEY,
+        secret_access_key: process.env.S3_SECRET_ACCESS_KEY_ID,
         // cache_control: process.env.S3_CACHE_CONTROL,
         // // optional
         // download_file_duration:
