@@ -19,14 +19,14 @@ switch (process.env.NODE_ENV) {
 
 try {
   dotenv.config({ path: process.cwd() + "/" + ENV_FILE_NAME });
-} catch (e) {}
+} catch (e) { }
 
 // CORS when consuming Medusa from admin
 const ADMIN_CORS =
-  process.env.ADMIN_CORS || "http://localhost:7000,http://localhost:7001";
+  process.env.ADMIN_CORS || "http://localhost:7000,http://localhost:7001"|| "http://localhost:9000";
 
 // CORS to avoid issues when consuming Medusa from a client
-const STORE_CORS = process.env.STORE_CORS || "http://localhost:8000";
+const STORE_CORS = process.env.STORE_CORS || "http://localhost:8000"|| "http://localhost:9000";
 
 const DATABASE_URL =
   process.env.DATABASE_URL || "postgres://localhost/medusa-starter-default";
@@ -45,16 +45,16 @@ const plugins = [
   {
     resolve: `medusa-file-s3`,
     options: {
-        s3_url: process.env.S3_URL,
-        bucket: process.env.S3_BUCKET,
-        region: process.env.S3_REGION,
-        access_key_id: process.env.S3_ACCESS_KEY_ID,
-        secret_access_key: process.env.S3_SECRET_ACCESS_KEY_ID,
-        // cache_control: process.env.S3_CACHE_CONTROL,
-        // // optional
-        // download_file_duration:
-        //   process.env.S3_DOWNLOAD_FILE_DURATION,
-        // prefix: process.env.S3_PREFIX,
+      s3_url: process.env.S3_URL,
+      bucket: process.env.S3_BUCKET,
+      region: process.env.S3_REGION,
+      access_key_id: process.env.S3_ACCESS_KEY_ID,
+      secret_access_key: process.env.S3_SECRET_ACCESS_KEY_ID,
+      // cache_control: process.env.S3_CACHE_CONTROL,
+      // // optional
+      // download_file_duration:
+      //   process.env.S3_DOWNLOAD_FILE_DURATION,
+      // prefix: process.env.S3_PREFIX,
     },
   },
   {
@@ -68,12 +68,21 @@ const plugins = [
     },
   },
   {
-    resolve: `medusa-payment-stripe`,
+    resolve: `medusa-payment-paypal`,
     options: {
-      api_key: process.env.STRIPE_API_KEY,
-      webhook_secret: process.env.STRIPE_WEBHOOK_SECRET,
+      sandbox: process.env.PAYPAL_SANDBOX,
+      clientId: process.env.PAYPAL_CLIENT_ID,
+      clientSecret: process.env.PAYPAL_CLIENT_SECRET,
+      authWebhookId: process.env.PAYPAL_AUTH_WEBHOOK_ID,
     },
   },
+  // {
+  //   resolve: `medusa-payment-stripe`,
+  //   options: {
+  //     api_key: process.env.STRIPE_API_KEY,
+  //     webhook_secret: process.env.STRIPE_WEBHOOK_SECRET,
+  //   },
+  // },
 ];
 
 const modules = {
@@ -91,6 +100,8 @@ const modules = {
   },*/
 };
 
+
+
 /** @type {import('@medusajs/medusa').ConfigModule["projectConfig"]} */
 const projectConfig = {
   jwtSecret: process.env.JWT_SECRET,
@@ -98,23 +109,80 @@ const projectConfig = {
   store_cors: STORE_CORS,
   database_url: DATABASE_URL,
   admin_cors: ADMIN_CORS,
+  
+  // database_extra:
+  //   process.env.NODE_ENV !== "development"
+  //     ? { ssl: { rejectUnauthorized: false } }
+  //     : {},
+
   // Uncomment the following lines to enable REDIS
   // redis_url: REDIS_URL
 };
 
+// projectConfig: {
+//   redis_url: REDIS_URL,
+//   database_url: DATABASE_URL,
+//   database_type: "postgres",
+//   store_cors: STORE_CORS,
+//   admin_cors: ADMIN_CORS,
+//   database_extra:
+//     process.env.NODE_ENV !== "development"
+//       ? { ssl: { rejectUnauthorized: false } }
+//       : {},
+// }
+
+// A REACTIVER POUR PROD METTRE CONDITION qui surcharge si problème
+if (process.env.NODE_ENV == "production") {
+  modules = {
+    eventBus: {
+      resolve: "@medusajs/event-bus-redis",
+      options: {
+        redisUrl: REDIS_URL
+      }
+    },
+    cacheService: {
+      resolve: "@medusajs/cache-redis",
+      options: {
+        redisUrl: REDIS_URL
+      }
+    },
+  };
+  projectConfig['redis_url'] = REDIS_URL;
+};
+
+
 /** @type {import('@medusajs/medusa').ConfigModule} */
 module.exports = {
-  projectConfig: {
-    redis_url: REDIS_URL,
-    database_url: DATABASE_URL,
-    database_type: "postgres",
-    store_cors: STORE_CORS,
-    admin_cors: ADMIN_CORS,
-    database_extra:
-      process.env.NODE_ENV !== "development"
-        ? { ssl: { rejectUnauthorized: false } }
-        : {},
-  },
+  projectConfig
+  // projectConfig: {
+  //   redis_url: REDIS_URL,
+  //   database_url: DATABASE_URL,
+  //   database_type: "postgres",
+  //   store_cors: STORE_CORS,
+  //   admin_cors: ADMIN_CORS,
+  //   database_extra:
+  //     process.env.NODE_ENV !== "development"
+  //       ? { ssl: { rejectUnauthorized: false } }
+  //       : {},
+  // }
+  ,
   plugins,
   modules,
+  async headers() {
+    return [
+      {
+        source: '/about',
+        headers: [
+          {
+            key: 'x-custom-header',
+            value: 'my custom header value',
+          },
+          {
+            key: 'x-another-custom-header',
+            value: 'my other custom header value',
+          },
+        ],
+      },
+    ]
+  },
 };
