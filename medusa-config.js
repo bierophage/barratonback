@@ -86,7 +86,7 @@ const plugins = [
 ];
 
 const modules = {
-  /*eventBus: {
+  eventBus: {
     resolve: "@medusajs/event-bus-redis",
     options: {
       redisUrl: REDIS_URL
@@ -95,9 +95,10 @@ const modules = {
   cacheService: {
     resolve: "@medusajs/cache-redis",
     options: {
-      redisUrl: REDIS_URL
+      redisUrl: REDIS_URL,
+      ttl: 30,
     }
-  },*/
+  },
 };
 
 
@@ -132,6 +133,7 @@ const projectConfig = {
 // }
 
 // A REACTIVER POUR PROD METTRE CONDITION qui surcharge si problème
+/*
 if (process.env.NODE_ENV == "production") {
   modules = {
     eventBus: {
@@ -143,12 +145,14 @@ if (process.env.NODE_ENV == "production") {
     cacheService: {
       resolve: "@medusajs/cache-redis",
       options: {
-        redisUrl: REDIS_URL
+        redisUrl: REDIS_URL,
+        ttl: 30,
       }
     },
   };
   projectConfig['redis_url'] = REDIS_URL;
 };
+*/
 
 
 /** @type {import('@medusajs/medusa').ConfigModule} */
@@ -167,22 +171,5 @@ module.exports = {
   // }
   ,
   plugins,
-  modules,
-  async headers() {
-    return [
-      {
-        source: '/about',
-        headers: [
-          {
-            key: 'x-custom-header',
-            value: 'my custom header value',
-          },
-          {
-            key: 'x-another-custom-header',
-            value: 'my other custom header value',
-          },
-        ],
-      },
-    ]
-  },
+  modules
 };
